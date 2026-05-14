@@ -34,7 +34,7 @@ That redirect URI must match `GOOGLE_OAUTH_REDIRECT_URI` in [`docker-compose.yml
 
 **Same machine as Docker (local):** use [`docker-compose.yml`](docker-compose.yml) as-is. Set `TODOIST_API_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; leave `GOOGLE_REFRESH_TOKEN` empty. Start the stack (`docker compose up -d` or Portainer). Open the container logs, follow the printed Google URL, approve access, copy the printed refresh token into env, redeploy. Then you can comment out the `ports:` block (8765 is only for that first OAuth step).
 
-**Homelab or remote server:** clone this repo on a machine where you can run Node and use a browser. `npm install`, copy [`.env.example`](.env.example) to `.env`, set the three Google/Todoist secrets, leave `GOOGLE_REFRESH_TOKEN` empty, run `npm run oauth`, complete OAuth in the browser, copy the printed refresh token. On the server, deploy the same compose file with all four secrets set (including `GOOGLE_REFRESH_TOKEN`). No OAuth step runs on the server.
+**Homelab or remote server:** clone this repo on a machine where you can run Node and use a browser. `npm install`, copy [`.env.example`](.env.example) to `.env`, set the three Google/Todoist secrets, leave `GOOGLE_REFRESH_TOKEN` empty, run `npm run oauth`, complete OAuth in the browser, copy the printed refresh token. On the server, deploy the same compose file with all four secrets set (including `GOOGLE_REFRESH_TOKEN`). Comment out the `ports:` block in the compose file. No OAuth step runs on the server.
 
 Without Portainer: fill `.env` from `.env.example` and run `docker compose up -d`.
 
