@@ -14,8 +14,6 @@ Headless **Todoist → Google Calendar** sync service. Todoist is the only sourc
 - Each Google event links back to Todoist (`https://app.todoist.com/app/task/<id>`).
 - Crash-safe mapping in SQLite + `extendedProperties.private.todoist_task_id` on every event.
 
----
-
 ## Getting started
 
 ### 1. Todoist API token
@@ -40,8 +38,6 @@ That redirect URI must match `GOOGLE_OAUTH_REDIRECT_URI` in [`docker-compose.yml
 
 Without Portainer: fill `.env` from `.env.example` and run `docker compose up -d`.
 
----
-
 ## Running locally (no Docker)
 
 ```bash
@@ -52,8 +48,6 @@ npm run oauth   # OAuth only, then exits
 ```
 
 Put `GOOGLE_REFRESH_TOKEN` in `.env`, then `npm start` for the sync loop.
-
----
 
 ## Configuration
 
@@ -78,10 +72,6 @@ Non-secrets are in [`docker-compose.yml`](docker-compose.yml):
 | `SPECIAL_CALENDAR_TASKS`     | `Tasks`                                | Inbox/catch-all calendar name (before prefix). |
 | `LOG_LEVEL`                  | `info`                                 | `debug` / `info` / `warn` / `error`.           |
 
----
-
 ## Data persistence
 
 The Compose file bind-mounts `/data/todoist-gcal-daemon/` on the host to `/app/data` in the container. Change the host path if you want, it must be writable by uid 1000 (`node` in the image).
-
----
