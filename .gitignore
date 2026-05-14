@@ -1,0 +1,12 @@
+.vscode/
+.cursor/
+.cursorignore
+.env
+.env.local
+.DS_Store
+
+node_modules/
+dist/
+data/
+*.log
+*.tsbuildinfo

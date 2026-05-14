@@ -1,0 +1,34 @@
+services:
+  daemon:
+    image: yashpatel21/todoist-gcal-daemon:latest
+    container_name: todoist-gcal-daemon
+    restart: unless-stopped
+
+    environment:
+      TODOIST_API_TOKEN: ${TODOIST_API_TOKEN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REFRESH_TOKEN: ${GOOGLE_REFRESH_TOKEN}
+
+      # Must match an Authorized redirect URI on your Web OAuth client (Google
+      # does not allow private LAN IPs). Homelab/Server: run OAuth once on your local machine
+      # with `npm start` in this repo to retrieve the refresh token, then use it here.
+      GOOGLE_OAUTH_REDIRECT_URI: http://localhost:8765/oauth/callback
+
+      POLL_INTERVAL_SECONDS: "60"
+      DATABASE_PATH: /app/data/sync.db
+      LOG_LEVEL: info
+
+      MANAGED_CALENDAR_PREFIX: "Todoist:"
+      SPECIAL_CALENDAR_REMINDERS: Reminders
+      SPECIAL_CALENDAR_TASKS: Tasks
+
+    volumes:
+      - /data/todoist-gcal-daemon/:/app/data
+
+    # Published only for the initial OAuth bootstrap (first run with no
+    # GOOGLE_REFRESH_TOKEN). After the token is captured and pasted into
+    # .env, you can remove this ports section; the daemon will not re-open
+    # the OAuth listener as long as the refresh token is set.
+    ports:
+      - "8765:8765"
