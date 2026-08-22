@@ -1,8 +1,8 @@
 import type { TodoistProject } from './types.js'
 
 /**
- * Walks the parentId chain to the top-level project. Cycles are guarded.
- * Returns the top-level project id, or null if the project is missing or orphaned.
+ * Walk the parentId chain up to the top-level project.
+ * Returns that project id, or null if the project is missing or orphaned.
  */
 export function resolveTopLevelProjectId(
   projectId: string | null | undefined,

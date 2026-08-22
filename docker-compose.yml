@@ -10,9 +10,10 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REFRESH_TOKEN: ${GOOGLE_REFRESH_TOKEN}
 
-      # Must match an Authorized redirect URI on your Web OAuth client (Google
-      # does not allow private LAN IPs). Homelab/Server: run OAuth once on your local machine
-      # with `npm start` in this repo to retrieve the refresh token, then use it here.
+      # Must match an Authorized redirect URI on your Web OAuth client.
+      # Google does not allow private LAN IPs here.
+      # Homelab/server: run OAuth once on your local machine with `npm start`
+      # in this repo to retrieve the refresh token, then use it here.
       GOOGLE_OAUTH_REDIRECT_URI: http://localhost:8765/oauth/callback
 
       POLL_INTERVAL_SECONDS: "60"
@@ -33,7 +34,7 @@ services:
 
     # Published only for the initial OAuth bootstrap (first run with no
     # GOOGLE_REFRESH_TOKEN). After the token is captured and pasted into
-    # .env, you can remove this ports section; the daemon will not re-open
+    # .env, you can remove this ports section. The daemon will not re-open
     # the OAuth listener as long as the refresh token is set.
     ports:
       - "8765:8765"

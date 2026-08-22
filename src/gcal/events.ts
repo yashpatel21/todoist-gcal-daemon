@@ -14,16 +14,35 @@ export function buildTodoistTaskUrl(taskId: string): string {
   return `${TODOIST_TASK_URL_PREFIX}${taskId}`
 }
 
+/** True if the string already has an offset or Z (fixed instant). */
+function hasExplicitOffset(iso: string): boolean {
+  return /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(iso)
+}
+
 /**
- * Builds the Google Calendar event payload for a Todoist task. Encodes the
- * Todoist task id into `extendedProperties.private.todoist_task_id` so the
- * event remains recoverable even if the local mapping DB is lost.
- *
- * Timezone strategy: Todoist's timezone metadata is authoritative; we pass it
- * straight through on timed events, and never reinterpret. All-day tasks use
- * `start.date` / `end.date` per the architecture.
+ * Format a local wall-clock time without offset/Z.
+ * Google Calendar prefers this together with a separate `timeZone` field.
  */
-export function buildEventPayload(task: TodoistTask): EventPayload {
+function formatFloatingDateTime(dt: DateTime): string {
+  return dt.toFormat("yyyy-MM-dd'T'HH:mm:ss")
+}
+
+/**
+ * Builds the Google Calendar event payload for a Todoist task.
+ * Stores the Todoist task id in `extendedProperties.private.todoist_task_id`
+ * so events can be recovered if the local mapping DB is lost.
+ *
+ * Todoist due times come in two shapes (API v1):
+ * - Floating: `YYYY-MM-DDTHH:MM:SS` with `timezone: null` means wall clock in
+ *   the authenticated user's timezone (`userTimezone`).
+ * - Fixed: `...Z` (UTC) with a task-level `timezone` means convert to that zone
+ *   for display, falling back to `userTimezone`.
+ *
+ * Timed events always use a local `dateTime` (no offset) plus an IANA `timeZone`
+ * so clients show the same wall clock the user set in Todoist. All-day tasks use
+ * `start.date` / `end.date`.
+ */
+export function buildEventPayload(task: TodoistTask, userTimezone: string): EventPayload {
   const todoistUrl = buildTodoistTaskUrl(task.id)
   const userDescription = task.description.trim()
   const description =
@@ -54,10 +73,20 @@ export function buildEventPayload(task: TodoistTask): EventPayload {
     }
   }
 
-  const tz = task.due.timezone ?? undefined
   const startStr = task.due.datetime
-  const startDt = DateTime.fromISO(startStr, { setZone: true })
-  if (!startDt.isValid) throw new Error(`Invalid datetime from Todoist: ${startStr}`)
+  const zone = (task.due.timezone && task.due.timezone.trim()) || userTimezone
+
+  let startDt: DateTime
+  if (hasExplicitOffset(startStr)) {
+    // Fixed UTC instant. Convert to wall clock in the resolved zone.
+    startDt = DateTime.fromISO(startStr, { setZone: true }).setZone(zone)
+  } else {
+    // Floating local time in the user's (or task) timezone. Do not treat as UTC.
+    startDt = DateTime.fromISO(startStr, { zone })
+  }
+  if (!startDt.isValid) {
+    throw new Error(`Invalid datetime from Todoist: ${startStr} (zone=${zone})`)
+  }
 
   let durationMinutes = DEFAULT_TIMED_DURATION_MINUTES
   if (task.duration) {
@@ -70,8 +99,8 @@ export function buildEventPayload(task: TodoistTask): EventPayload {
 
   return {
     ...base,
-    start: { dateTime: startDt.toISO() ?? startStr, timeZone: tz },
-    end: { dateTime: endDt.toISO() ?? startStr, timeZone: tz },
+    start: { dateTime: formatFloatingDateTime(startDt), timeZone: zone },
+    end: { dateTime: formatFloatingDateTime(endDt), timeZone: zone },
   }
 }
 
@@ -144,8 +173,8 @@ export async function deleteEvent(
 }
 
 /**
- * Lists all events in a calendar that carry our todoist_task_id extended property.
- * Used by the startup reconciliation pass to rebuild lost mappings.
+ * Lists events in a calendar that carry our todoist_task_id extended property.
+ * Used at startup to rebuild missing mappings.
  */
 export async function listManagedEvents(
   gcal: GCalClient,
@@ -169,9 +198,8 @@ export async function listManagedEvents(
 }
 
 /**
- * Searches all calendars for a managed event with the given Todoist task id.
- * Used as the third layer of duplicate prevention when the local mapping is
- * absent but the event might still exist somewhere.
+ * Searches managed calendars for an event with the given Todoist task id.
+ * Helps avoid duplicates when the local mapping is gone but the event still exists.
  */
 export async function findManagedEventByTodoistId(
   gcal: GCalClient,

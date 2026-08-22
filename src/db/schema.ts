@@ -48,8 +48,8 @@ const MIGRATIONS: Migration[] = [
 ]
 
 /**
- * Applies any unapplied migrations in order. Idempotent: safe to call on every startup.
- * Uses a single `schema_migrations` table to track applied versions.
+ * Apply any unapplied migrations. Safe to call on every startup.
+ * Uses a `schema_migrations` table to track applied versions.
  */
 export function runMigrations(db: Database.Database): void {
   db.exec(`

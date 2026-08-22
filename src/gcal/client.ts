@@ -10,8 +10,8 @@ export type GCalClient = {
 }
 
 /**
- * Builds an authenticated googleapis Calendar client backed by a refresh token.
- * The OAuth2 client transparently refreshes the access token as needed.
+ * Authenticated Google Calendar client using a refresh token.
+ * Access tokens are refreshed automatically when needed.
  */
 export function createGCalClient(args: {
   clientId: string

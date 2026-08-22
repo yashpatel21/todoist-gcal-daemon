@@ -62,8 +62,7 @@ export class TaskMappingsRepo {
   }
 
   /**
-   * Upserts an active mapping. The architecture requires that callers only invoke this
-   * AFTER a successful Google Calendar write.
+   * Upsert an active mapping. Call only after a successful Google Calendar write.
    */
   upsertActive(args: {
     todoistTaskId: string

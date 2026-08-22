@@ -7,12 +7,11 @@ import { log, setLogLevel } from './logger.js'
 const SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 /**
- * One-shot OAuth bootstrap: spins up a localhost callback server, prints a consent URL,
- * exchanges the returned code for a refresh token, prints the token, and exits.
+ * One-shot OAuth bootstrap. Starts a localhost callback server, prints a consent
+ * URL, exchanges the code for a refresh token, prints the token, and exits.
  *
- * Designed for container workflows: the user pastes the printed token into
- * `GOOGLE_REFRESH_TOKEN` and restarts. The daemon will then skip this bootstrap
- * and go straight into the sync loop.
+ * For Docker/Portainer: paste the printed token into `GOOGLE_REFRESH_TOKEN` and
+ * restart. After that the daemon skips bootstrap and runs the sync loop.
  */
 export async function runOAuthBootstrap(): Promise<string> {
 	const config = loadConfig()
@@ -43,7 +42,7 @@ export async function runOAuthBootstrap(): Promise<string> {
 	log.info(authUrl)
 
 	const code = await waitForCode({ host, port, callbackPath })
-	log.info('Received authorization code; exchanging for tokens')
+	log.info('Received authorization code, exchanging for tokens')
 
 	const { tokens } = await oauth2Client.getToken(code)
 	if (!tokens.refresh_token) {

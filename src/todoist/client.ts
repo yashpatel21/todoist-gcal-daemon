@@ -11,11 +11,15 @@ export class TodoistClient {
   }
 
   /**
-   * Fetches the full Todoist state (active projects + active tasks) and normalizes it.
-   * - Projects: paginates `getProjects`, drops archived/deleted, identifies the inbox.
-   * - Tasks: paginates `getTasks`, drops tasks without due dates (per architecture).
+   * Fetches active projects and tasks, then normalizes them.
+   * - User: `getUser` for the account timezone (needed for floating due times).
+   * - Projects: paginates `getProjects`, drops archived/deleted, finds the inbox.
+   * - Tasks: paginates `getTasks`, drops tasks without due dates.
    */
   async fetchSnapshot(): Promise<TodoistSnapshot> {
+    const user = await this.api.getUser()
+    const userTimezone = user.tzInfo?.timezone?.trim() || 'UTC'
+
     const rawProjects = await this.fetchAllProjects()
     const projects: TodoistProject[] = rawProjects
       .filter((p) => !p.isArchived && !p.isDeleted)
@@ -35,7 +39,7 @@ export class TodoistClient {
       if (normalized) tasks.push(normalized)
     }
 
-    return { projects, projectsById, inboxProjectId, tasks }
+    return { userTimezone, projects, projectsById, inboxProjectId, tasks }
   }
 
   private async fetchAllProjects(): Promise<UnknownProject[]> {
@@ -126,10 +130,9 @@ function normalizeTask(t: UnknownTask): TodoistTask | null {
 function normalizeDue(due: NonNullable<UnknownTask['due']>): TodoistDue | null {
   const tz = (due.timezone ?? null) || null
 
-  // The Todoist v1 API folds timed tasks into the `date` field as a full
-  // RFC3339 datetime; `datetime` is a legacy alias that may be null even for
-  // timed tasks. Use the presence of "T" as the kind discriminator, regardless
-  // of which field the string came from.
+  // Todoist v1 often puts timed dues in `date` as a full RFC3339 datetime.
+  // `datetime` is a legacy alias and may be null even for timed tasks.
+  // Use the presence of "T" to tell date-only from datetime.
   const datetimeCandidate =
     due.datetime && due.datetime.length > 0 ? due.datetime : null
   if (datetimeCandidate) {
@@ -148,6 +151,6 @@ function normalizeDue(due: NonNullable<UnknownTask['due']>): TodoistDue | null {
 function toIso(v: Date | string | null | undefined): string | null {
   if (!v) return null
   if (v instanceof Date) return v.toISOString()
-  // Already a string; trust the SDK's ISO formatting.
+  // Already a string. Trust the SDK's ISO formatting.
   return v
 }

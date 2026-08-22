@@ -17,7 +17,7 @@ async function main(): Promise<void> {
   setLogLevel(config.daemon.logLevel)
 
   if (!config.google.refreshToken) {
-    log.warn('GOOGLE_REFRESH_TOKEN is not set; entering one-shot OAuth bootstrap')
+    log.warn('GOOGLE_REFRESH_TOKEN is not set, entering one-shot OAuth bootstrap')
     const refreshToken = await runOAuthBootstrap()
     console.log('')
     console.log('================ GOOGLE_REFRESH_TOKEN ================')
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
   const handle = await runDaemon(config)
 
   const shutdown = async (signal: string): Promise<void> => {
-    log.info('Received signal; shutting down', { signal })
+    log.info('Received signal, shutting down', { signal })
     try {
       await handle.stop()
     } finally {

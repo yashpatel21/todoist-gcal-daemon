@@ -1,6 +1,6 @@
 /**
- * Internal Todoist representations, decoupled from the SDK's evolving schema.
- * Only the fields the daemon actually uses are kept.
+ * Internal Todoist types used by the daemon.
+ * Only fields we actually need are kept here.
  */
 
 export type TodoistProject = {
@@ -32,6 +32,8 @@ export type TodoistTask = {
 }
 
 export type TodoistSnapshot = {
+  /** IANA timezone from the authenticated Todoist user (e.g. America/New_York). */
+  userTimezone: string
   projects: TodoistProject[]
   projectsById: Map<string, TodoistProject>
   inboxProjectId: string | null

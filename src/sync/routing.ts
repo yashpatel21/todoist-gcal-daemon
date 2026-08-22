@@ -7,7 +7,7 @@ export type RouteTarget =
   | { kind: 'tasks' }
   | { kind: 'project'; topLevelProjectId: string; projectName: string }
 
-/** Route targets that map to an actual Google calendar (excludes `none`). */
+/** Route targets that map to a real Google calendar (`none` is excluded). */
 export type RoutedCalendarTarget = Exclude<RouteTarget, { kind: 'none' }>
 
 export type RoutingContext = {
@@ -19,10 +19,10 @@ export type RoutingContext = {
 
 /**
  * Routing order:
- * 1. `noCalendarLabel` present -> do not sync (remove any existing event).
- * 2. `reminderLabel` present -> Reminders calendar.
- * 3. Inbox or no resolvable project -> Tasks calendar.
- * 4. Else -> top-level project calendar.
+ * 1. `noCalendarLabel` present: do not sync (remove any existing event).
+ * 2. `reminderLabel` present: Reminders calendar.
+ * 3. Inbox or no resolvable project: Tasks calendar.
+ * 4. Else: top-level project calendar.
  */
 export function route(task: TodoistTask, ctx: RoutingContext): RouteTarget {
   if (task.labels.includes(ctx.noCalendarLabel)) {
